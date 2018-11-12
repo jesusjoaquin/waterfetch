@@ -48,14 +48,9 @@ def analyze_shp(path):
     # Now I want to extract the countries whose polygon is in desperate need.
     new_shp = country_selection(gdf)
 
-    # This is the GeoDataFrame that we want to work with
-    #print('Extracted', len(shape_list), 'countries.')
-    #print(shape_list)
 
-    #new_gdf = GeoDataFrame(
     # It is important that I export this new GeoDataFrame so I can use it in
     # the future, and not have to do the selections all over again.
-    # I should drop the colums of the data frame that I don't need.`
     new_shp.to_file('sub_saharan_africa.shp')
 
 
@@ -71,13 +66,14 @@ def country_selection(shp_data):
             'Zambia', 'Zimbabwe']
 
 
-    # Change variable names
+    # Making a list of the geometries that are needed 'countries' list.
     final_list = list()
     for index, row in shp_data.iterrows():
         if row['NAME'] in countries:
             final_list.append(row)
 
 
+    # Converting the list of geometries back to a GeoDataFrame
     cols = ['NAME', 'geometry']
     final_df = gpd.GeoDataFrame(final_list, columns=cols)
 
