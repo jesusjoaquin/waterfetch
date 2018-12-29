@@ -7,10 +7,45 @@ print(pd.__version__)
 print('Geopandas version:')
 print(gpd.__version__)
 
+# Define the names of the countries based the current .shp. Countries are
+# identified with variables that are their dhs country code.
+ao = 'angola'
+bf = 'burkina faso'
+bj = 'benin'
+bu = 'burundi'
+cd = 'congo'
+cf = 'central african republic'
+ci = 'ivory coast'
+cm = 'cameroon'
+ga = 'gabon'
+gh = 'ghana'
+gn = 'guinea'
+ke = 'kenya'
+km = 'comoros'
+lb = 'liberia'
+ls = 'lesotho'
+md = 'madagascar'
+ml = 'mali'
+mw = 'malawi'
+mz = 'mozambique'
+ng = 'nigeria'
+ni = 'niger'
+nm = 'namibia'
+rw = 'rwanda'
+sl = 'sierra leone'
+sn = 'senegal'
+td = 'chad'
+tg = 'togo'
+tz = 'tanzania, united republic of'
+ug = 'uganda'
+zm = 'zambia'
+zw = 'zimbabwe'
+
+
 def main():
     # Edit the paths when working with different shapefile
-    dbf_path = '../africa/africa_countries.dbf'
-    shp_path = '../africa/africa_countries.shp'
+    dbf_path = '../data/africa/africa_countries.dbf'
+    shp_path = '../data/africa/africa_countries.shp'
 
     analyze_dbf(dbf_path)
     analyze_shp(shp_path)
@@ -28,8 +63,8 @@ def analyze_dbf(path):
 
     # Ideally, the dbf data should be converted to a dataframe and it should be
     # printed. Sometimes not possible due to Unicode/Decode errors. Check.
-    #df = dbf.to_dataframe()
-    #print('Data of the .dbf file:\n', df))
+    df = dbf.to_dataframe()
+    print('Data of the .dbf file:\n', df)
 
 
 def analyze_shp(path):
@@ -37,16 +72,19 @@ def analyze_shp(path):
     gdf = gpd.read_file(path)
     print(gdf.dtypes)
     print(gdf.head())
-    #print(gdf.columns)
-    #print(gdf.FIPS_CNTRY)
-    #print(gdf.CNTRY_NAME)
 
-    # The code below should be editted to examine the current .shp file.
+    # After looking at the info in the .dbf, set country_col
+    # Stores the column name which contains the full country string.
+    country_col = 'CNTRY_NAME'
+    needed_info = [country_col, 'geometry']
 
+    # Drop the columns that are not needed
+    for c in gdf.columns:
+        if c not in needed_info:
+            gdf.drop(c, axis=1, inplace=True)
 
-    # Extracting the fields I am interested in.
-    # Drop the columns I don't need. =======> do
-    gdf = gdf[['CNTRY_NAME', 'geometry']]
+    # Rename columns now, so code below this point does not have to be altered.
+    gdf.columns = ['dhscc', 'geometry']
 
     # Now I want to extract the countries whose polygon is in desperate need.
     new_shp = country_selection(gdf)
@@ -54,20 +92,15 @@ def analyze_shp(path):
 
     # It is important that I export this new GeoDataFrame so I can use it in
     # the future, and not have to do the selections all over again.
-    new_shp.to_file('../africa/sub_saharan_africa.shp')
+    new_shp.to_file('../data/africa/sub_saharan_africa.shp')
 
 
 
 def country_selection(shp_data):
     # A list is created with all the countries that would like to extract.
     # Shapefiles have various country names, so this might need to change.
-    countries = ['angola', 'burkina faso', 'benin', 'burundi',
-            'congo', 'central african republic',
-            'ivory coast', 'cameroon', 'gabon', 'ghana', 'guinea', 'kenya',
-            'comoros', 'liberia', 'lesotho', 'madagascar', 'mali', 'malawi',
-            'mozambique', 'nigeria', 'niger', 'namibia', 'rwanda',
-            'sierra leone', 'senegal', 'chad', 'togo', 'tanzania, united republic of', 'uganda',
-            'zambia', 'zimbabwe']
+    countries = [ao, bf, bj, bu, cd, cf, ci, cm, ga, gh, gn, ke, km, lb, ls,
+            md, ml, mw, mz, ng, ni, nm, rw, sl, sn, td, tg, tz, ug, zm, zw]
 
     req_shape_num = len(countries)
 
@@ -81,18 +114,18 @@ def country_selection(shp_data):
     final_list = list()
     found_list = list()
     for index, row in shp_data.iterrows():
-        if row['CNTRY_NAME'].lower() in countries:
-            row['CNTRY_NAME'] = assign_dhscc(row['CNTRY_NAME'].lower())
-            found_list.append(row['CNTRY_NAME'].lower())
+        if row['dhscc'].lower() in countries:
+            row['dhscc'] = assign_dhscc(row['dhscc'].lower())
+            found_list.append(row['dhscc'].lower())
             final_list.append(row)
 
     # Converting the list of geometries back to a GeoDataFrame
-    cols = ['CNTRY_NAME', 'geometry']
-    final_df = gpd.GeoDataFrame(final_list, columns=cols)
+    final_df = gpd.GeoDataFrame(final_list)
 
     print('\nExtracted:\n')
-
     print(final_df)
+
+    # Checking if all needed countries were found
     if len(final_df) == req_shape_num:
         print('\nYou have all the shapes you need!')
     else:
@@ -104,11 +137,21 @@ def country_selection(shp_data):
     return final_df
 
 
-    # This function will assign a much need DHS Country Code, that will
-    # allow the geometry to be easily referenced when working with dhs
-    # survey data.
-    def assign_dhscc(country_name):
-        return
+# This function will assign a much need DHS Country Code, that will
+# allow the geometry to be easily referenced when working with dhs
+# survey data.
+def assign_dhscc(country_name):
+    dhscc = dict()
+    dhscc[ao] = 'AO'; dhscc[bf] = 'BF'; dhscc[bj] = 'BJ'; dhscc[bu] = 'BU'
+    dhscc[cd] = 'CD'; dhscc[cf] = 'CF'; dhscc[ci] = 'CI'; dhscc[cm] = 'CM'
+    dhscc[ga] = 'GA'; dhscc[gh] = 'GH'; dhscc[gn] = 'GN'; dhscc[ke] = 'KE'
+    dhscc[km] = 'KM'; dhscc[lb] = 'LB'; dhscc[ls] = 'LS'; dhscc[md] = 'MD'
+    dhscc[ml] = 'ML'; dhscc[mw] = 'MW'; dhscc[mz] = 'MZ'; dhscc[ng] = 'NG'
+    dhscc[ni] = 'NI'; dhscc[nm] = 'NM'; dhscc[rw] = 'RW'; dhscc[sl] = 'SL'
+    dhscc[sn] = 'SN'; dhscc[td] = 'TD'; dhscc[tg] = 'TG'; dhscc[tz] = 'TZ'
+    dhscc[ug] = 'UG'; dhscc[zm] = 'ZM'; dhscc[zw] = 'ZW'
+
+    return dhscc[country_name]
 
 
 if __name__ == '__main__':
