@@ -13,9 +13,9 @@ ao = 'angola'
 bf = 'burkina faso'
 bj = 'benin'
 bu = 'burundi'
-cd = 'congo'
+cd = 'democratic republic of congo' # common change
 cf = 'central african republic'
-ci = 'ivory coast'
+ci = 'cote d`ivoire'    # common change
 cm = 'cameroon'
 ga = 'gabon'
 gh = 'ghana'
@@ -36,7 +36,7 @@ sl = 'sierra leone'
 sn = 'senegal'
 td = 'chad'
 tg = 'togo'
-tz = 'tanzania, united republic of'
+tz = 'tanzania' # common change
 ug = 'uganda'
 zm = 'zambia'
 zw = 'zimbabwe'
@@ -44,8 +44,8 @@ zw = 'zimbabwe'
 
 def main():
     # Edit the paths when working with different shapefile
-    dbf_path = '../data/africa/africa_countries.dbf'
-    shp_path = '../data/africa/africa_countries.shp'
+    dbf_path = '../data/shapefiles/Africa_SHP/Africa.dbf'
+    shp_path = '../data/shapefiles/Africa_SHP/Africa.shp'
 
     analyze_dbf(dbf_path)
     analyze_shp(shp_path)
@@ -66,6 +66,9 @@ def analyze_dbf(path):
     df = dbf.to_dataframe()
     print('Data of the .dbf file:\n', df)
 
+    print('Unique country names:')
+    print(df.COUNTRY.unique())
+
 
 def analyze_shp(path):
     print('\n===== .shp analysis =====')
@@ -75,7 +78,7 @@ def analyze_shp(path):
 
     # After looking at the info in the .dbf, set country_col
     # Stores the column name which contains the full country string.
-    country_col = 'CNTRY_NAME'
+    country_col = 'COUNTRY'
     needed_info = [country_col, 'geometry']
 
     # Drop the columns that are not needed
@@ -92,7 +95,7 @@ def analyze_shp(path):
 
     # It is important that I export this new GeoDataFrame so I can use it in
     # the future, and not have to do the selections all over again.
-    new_shp.to_file('../data/africa/sub_saharan_africa.shp')
+    new_shp.to_file('../data/shapefiles/Africa_SHP/sub_saharan_africa.shp')
 
 
 
@@ -116,7 +119,7 @@ def country_selection(shp_data):
     for index, row in shp_data.iterrows():
         if row['dhscc'].lower() in countries:
             row['dhscc'] = assign_dhscc(row['dhscc'].lower())
-            found_list.append(row['dhscc'].lower())
+            found_list.append(row['dhscc'])
             final_list.append(row)
 
     # Converting the list of geometries back to a GeoDataFrame
@@ -126,13 +129,16 @@ def country_selection(shp_data):
     print(final_df)
 
     # Checking if all needed countries were found
-    if len(final_df) == req_shape_num:
-        print('\nYou have all the shapes you need!')
+    completed = True
+    for c in countries:
+        if assign_dhscc(c) not in found_list:
+            print('Missing:', c)
+            completed = False
+
+    if completed:
+        print('You have obtained all needed shapes.')
     else:
-        print('\nWe are still missing the following shapes:')
-        for c in countries:
-            if c not in found_list:
-                print(c)
+        print('Go get those shapes!')
 
     return final_df
 
