@@ -13,9 +13,9 @@ ao = 'angola'
 bf = 'burkina faso'
 bj = 'benin'
 bu = 'burundi'
-cd = 'democratic republic of congo' # common change
+cd = 'zaire' # common change
 cf = 'central african republic'
-ci = 'cote d`ivoire'    # common change
+ci = 'ivory coast'    # common change
 cm = 'cameroon'
 ga = 'gabon'
 gh = 'ghana'
@@ -36,7 +36,7 @@ sl = 'sierra leone'
 sn = 'senegal'
 td = 'chad'
 tg = 'togo'
-tz = 'tanzania' # common change
+tz = 'tanzania, united republic of' # common change
 ug = 'uganda'
 zm = 'zambia'
 zw = 'zimbabwe'
@@ -44,8 +44,8 @@ zw = 'zimbabwe'
 
 def main():
     # Edit the paths when working with different shapefile
-    dbf_path = '../data/shapefiles/Africa_SHP/Africa.dbf'
-    shp_path = '../data/shapefiles/Africa_SHP/Africa.shp'
+    dbf_path = '../data/shapefiles/africa/africa_countries.dbf'
+    shp_path = '../data/shapefiles/africa/africa_countries.shp'
 
     analyze_dbf(dbf_path)
     analyze_shp(shp_path)
@@ -56,18 +56,16 @@ def analyze_dbf(path):
     dbf = Dbf5(path, codec='UTF-8')
 
     dbf_records = dbf.numrec
-    dbf_fields = dbf.fields
 
     print('The number of records in the .dbf:', dbf_records)
-    print('The fields of the .dbf:\n', dbf_fields)
 
     # Ideally, the dbf data should be converted to a dataframe and it should be
     # printed. Sometimes not possible due to Unicode/Decode errors. Check.
     df = dbf.to_dataframe()
-    print('Data of the .dbf file:\n', df)
-
+    print('Data of the .dbf file:\n', df.head())
+    print(df.columns)
     print('Unique country names:')
-    print(df.COUNTRY.unique())
+    print(df.CNTRY_NAME.unique())
 
 
 def analyze_shp(path):
@@ -78,7 +76,7 @@ def analyze_shp(path):
 
     # After looking at the info in the .dbf, set country_col
     # Stores the column name which contains the full country string.
-    country_col = 'COUNTRY'
+    country_col = 'CNTRY_NAME'
     needed_info = [country_col, 'geometry']
 
     # Drop the columns that are not needed
@@ -95,7 +93,7 @@ def analyze_shp(path):
 
     # It is important that I export this new GeoDataFrame so I can use it in
     # the future, and not have to do the selections all over again.
-    new_shp.to_file('../data/shapefiles/Africa_SHP/sub_saharan_africa.shp')
+    new_shp.to_file('../data/shapefiles/africa/sub_saharan_africa.shp')
 
 
 
